@@ -5,9 +5,36 @@ import {
   useFieldArray,
   useForm,
 } from "react-hook-form";
-import { FormData } from "../types/form";
 import DatePicker from "react-datepicker";
 import simulatedApi from "../api";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const formSchema = z.object({
+  firstName: z.string().min(1, "First Name is Required"),
+  lastName: z.string().min(1, "Last Name is Required"),
+  email: z.string().email("Invalid email address"),
+  age: z.number().min(18, "You must be at leat 18 years old"),
+  gender: z.enum(["male", "female"], {
+    message: "Gender is Required",
+  }),
+  address: z.object({
+    city: z.string().min(1, "City is Required"),
+    state: z.string().min(1, "State is Required"),
+  }),
+  hobbies: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Hobby name is required"),
+      })
+    )
+    .min(1, "At least one hobby is required"),
+  startDate: z.date(),
+  subscribe: z.boolean(),
+  referral: z.string().default(""),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const Form: React.FC = () => {
   const {
@@ -23,13 +50,14 @@ const Form: React.FC = () => {
       lastName: "",
       email: "",
       age: 18,
-      gender: "",
+      gender: undefined,
       address: { city: "", state: "" },
       hobbies: [{ name: "" }],
       startDate: new Date(),
       subscribe: false,
       referral: "",
     },
+    resolver: zodResolver(formSchema),
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -52,12 +80,7 @@ const Form: React.FC = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label htmlFor="firstName">First Name</label>
-        <input
-          id="firstName"
-          {...register("firstName", {
-            required: "First Name is required",
-          })}
-        />
+        <input id="firstName" {...register("firstName")} />
         {errors.firstName && (
           <p style={{ color: "orangered" }}>{errors.firstName.message}</p>
         )}
@@ -65,12 +88,7 @@ const Form: React.FC = () => {
 
       <div>
         <label htmlFor="lastName">Last Name</label>
-        <input
-          id="lastName"
-          {...register("lastName", {
-            required: "Last Name is required",
-          })}
-        />
+        <input id="lastName" {...register("lastName")} />
         {errors.lastName && (
           <p style={{ color: "orangered" }}>{errors.lastName.message}</p>
         )}
@@ -78,13 +96,7 @@ const Form: React.FC = () => {
 
       <div>
         <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: { value: /^\S+@\S+$/i, message: "Invalid email address" },
-          })}
-        />
+        <input id="email" {...register("email")} />
         {errors.email && (
           <p style={{ color: "orangered" }}>{errors.email.message}</p>
         )}
@@ -92,13 +104,7 @@ const Form: React.FC = () => {
 
       <div>
         <label htmlFor="age">Age</label>
-        <input
-          id="age"
-          {...register("age", {
-            required: "Age is required",
-            min: { value: 18, message: "You must be at least 18 years old" },
-          })}
-        />
+        <input id="age" {...register("age", { valueAsNumber: true })} />
         {errors.age && (
           <p style={{ color: "orangered" }}>{errors.age.message}</p>
         )}
@@ -106,12 +112,7 @@ const Form: React.FC = () => {
 
       <div>
         <label htmlFor="gender">Gender</label>
-        <select
-          id="gender"
-          {...register("gender", {
-            required: "Gender is required",
-          })}
-        >
+        <select id="gender" {...register("gender")}>
           <option value="">Select...</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
@@ -123,13 +124,7 @@ const Form: React.FC = () => {
 
       <div>
         <label htmlFor="address">Address</label>
-        <input
-          id="address"
-          {...register("address.city", {
-            required: "City is required",
-          })}
-          placeholder="City"
-        />
+        <input id="address" {...register("address.city")} placeholder="City" />
         {errors.address?.city && (
           <p style={{ color: "orangered" }}>{errors.address.city.message}</p>
         )}
@@ -137,9 +132,7 @@ const Form: React.FC = () => {
         <input
           id="address"
           placeholder="State"
-          {...register("address.state", {
-            required: "State is required",
-          })}
+          {...register("address.state")}
         />
         {errors.address?.state && (
           <p style={{ color: "orangered" }}>{errors.address.state.message}</p>
@@ -166,9 +159,7 @@ const Form: React.FC = () => {
         {fields.map((item, index) => (
           <div key={item.id}>
             <input
-              {...register(`hobbies.${index}.name`, {
-                required: "Hobby name is required",
-              })}
+              {...register(`hobbies.${index}.name`)}
               placeholder="Hobby Name"
             />
             {errors.hobbies?.[index]?.name && (
@@ -199,9 +190,7 @@ const Form: React.FC = () => {
           <label htmlFor="referral">Referral Source</label>
           <input
             id="referral"
-            {...register("referral", {
-              required: "Referral source is required if subscribing",
-            })}
+            {...register("referral")}
             placeholder="How did you hear about us?"
           />
           {errors.referral && (
