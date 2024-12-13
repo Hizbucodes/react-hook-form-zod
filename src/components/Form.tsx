@@ -44,6 +44,7 @@ const Form: React.FC = () => {
     getValues,
     handleSubmit,
     setError,
+    setFocus,
     formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<FormData>({
     defaultValues: {
@@ -78,8 +79,9 @@ const Form: React.FC = () => {
   };
 
   React.useEffect(() => {
+    setFocus("firstName");
     reset();
-  }, [isSubmitSuccessful]);
+  }, [isSubmitSuccessful, setFocus]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
