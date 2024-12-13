@@ -40,10 +40,11 @@ const Form: React.FC = () => {
   const {
     register,
     control,
+    reset,
     getValues,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<FormData>({
     defaultValues: {
       firstName: "",
@@ -75,6 +76,10 @@ const Form: React.FC = () => {
       });
     }
   };
+
+  React.useEffect(() => {
+    reset();
+  }, [isSubmitSuccessful]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
